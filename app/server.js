@@ -21,6 +21,16 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
+app.post("/login", (req, res) => {
+    let { username, password } = req.body;
+
+    if (username === "user" && password === "pass") {
+        res.status(200).send({message: "Login successful"});
+    } else {
+        res.status(401).send({error: "Invalid credentials"});
+    }
+});
+
 app.post("/feed", (req, res) => {
   console.log("POST request body: ", req.body);
   let post = req.body.post;

@@ -1,3 +1,20 @@
 function login() {
+    let username = document.getElementById('username').value;
+    let password = document.getElementById('password').value;
 
+    fetch('/login', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({username: username, password: password}),
+    })
+    .then(response => {
+        if (response.ok) {
+            window.location.href = '/profile.html';
+        } else {
+            console.error('Login failed');
+        }
+    })
+    .catch(error => console.error('Error:', error));
 }
