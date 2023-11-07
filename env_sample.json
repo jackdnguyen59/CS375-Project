@@ -1,0 +1,7 @@
+{
+    "user": "USER",
+    "host": "localhost",
+    "database": "musify",
+    "password": "PASSWORD",
+    "port": 5432
+}
