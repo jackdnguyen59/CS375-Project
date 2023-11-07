@@ -11,7 +11,7 @@ function login() {
     })
     .then(response => {
         if (response.ok) {
-            window.location.href = '/profile.html';
+            window.location.href = '/feed.html';
         } else {
             console.error('Login failed');
         }

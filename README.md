@@ -10,4 +10,4 @@ Logging In:
 - Currently hard-coded
 - Username: user
 - Password: pass
-- Will lead to profile.html which is blank right now
+- Will lead to feed.html
