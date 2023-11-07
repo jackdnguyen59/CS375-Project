@@ -1,4 +1,4 @@
-# CS375-Project
+# CS375-Project: Musify
 Getting Started:
 - Download repo
 - cd into CS375-Project/
