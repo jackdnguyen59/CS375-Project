@@ -1,6 +1,7 @@
 function login() {
     let username = document.getElementById('username').value;
     let password = document.getElementById('password').value;
+    let message = document.getElementById("error-message");
 
     fetch('/login', {
         method: 'POST',
@@ -14,6 +15,7 @@ function login() {
             window.location.href = '/feed.html';
         } else {
             console.error('Login failed');
+            message.textContent = "Login failed";
         }
     })
     .catch(error => console.error('Error:', error));

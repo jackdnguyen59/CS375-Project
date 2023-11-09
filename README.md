@@ -7,9 +7,3 @@ Getting Started:
 - Run `npm i`
 - Run `npm run setup`
 - Run `npm run start`
-
-Logging In:
-- Currently hard-coded
-- Username: user
-- Password: pass
-- Will lead to feed.html

@@ -25,11 +25,26 @@ app.get("/", (req, res) => {
 app.post("/login", (req, res) => {
     let { username, password } = req.body;
 
-    if (username === "user" && password === "pass") {
-        res.status(200).send({message: "Login successful"});
-    } else {
-        res.status(401).send({error: "Invalid credentials"});
-    }
+    pool.query('SELECT * FROM accountinfo WHERE username = $1', [username])
+        .then((result) => {
+            let user = result.rows[0];
+
+            if (!user) {
+                res.status(401).send({error: "Invalid credentials"});
+            } else {
+                bcrypt.compare(password, user.hashedpassword, (err, result) => {
+                    if (result) {
+                        res.status(200).send({message: "Login successful"});
+                    } else {
+                        res.status(401).send({error: "Invalid credentials"});
+                    }
+                });
+            }
+        })
+        .catch((error) => {
+            console.log(error);
+            res.status(500).send();
+        });
 });
 
 app.post("/feed", (req, res) => {
