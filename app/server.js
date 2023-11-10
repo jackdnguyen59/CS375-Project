@@ -2,10 +2,31 @@ let express = require("express");
 let path = require("path");
 let pg = require("pg");
 let bcrypt = require("bcrypt");
+let request = require('request');
+let crypto = require('crypto');
+let cors = require('cors');
+let querystring = require('querystring');
+let cookieParser = require('cookie-parser');
+
+let client_id = '096e467573ed4dd8aa8bb1e452cb0996';
+let client_secret = '234f5df19988444e840d92b7f61a6648';
+let redirect_uri = 'http://localhost:8888/callback';
+
+let generateRandomString = (length) => {
+    return crypto
+    .randomBytes(60)
+    .toString('hex')
+    .slice(0, length);
+}
+  
+let stateKey = 'spotify_auth_state';
 let app = express();
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(__dirname + '/public'))
+   .use(cors())
+   .use(cookieParser());
 
 let port = 3000;
 let hostname = "localhost";
@@ -22,6 +43,23 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
+app.get('/login', function(req, res) {
+
+    let state = generateRandomString(16);
+    res.cookie(stateKey, state);
+  
+    let scope = 'user-read-private user-read-email';
+    res.redirect('https://accounts.spotify.com/authorize?' +
+      querystring.stringify({
+        response_type: 'code',
+        client_id: client_id,
+        scope: scope,
+        redirect_uri: redirect_uri,
+        state: state
+      }));
+  });
+
+/*
 app.post("/login", (req, res) => {
     let { username, password } = req.body;
 
@@ -46,6 +84,7 @@ app.post("/login", (req, res) => {
             res.status(500).send();
         });
 });
+*/
 
 app.post("/feed", (req, res) => {
   console.log("POST request body: ", req.body);

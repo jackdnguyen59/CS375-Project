@@ -30,7 +30,8 @@ input[type="password"] {
     border-radius: 4px;
 }
 
-button {
+.spotify-button {
+    display: inline-block;
     width: 100%;
     padding: 10px;
     margin: 15px 0 10px 0;
@@ -38,10 +39,12 @@ button {
     border-radius: 4px;
     background-color: #1DB954;
     color: #fff;
+    text-align: center;
+    text-decoration: none;
     cursor: pointer;
     transition: background-color 0.3s;
 }
 
-button:hover {
+.spotify-button:hover {
     background-color: #168f48;
 }
