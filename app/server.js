@@ -10,7 +10,7 @@ let cookieParser = require('cookie-parser');
 
 let client_id = '096e467573ed4dd8aa8bb1e452cb0996';
 let client_secret = '234f5df19988444e840d92b7f61a6648';
-let redirect_uri = 'http://localhost:8888/callback';
+let redirect_uri = 'http://localhost:3000/callback';
 
 let generateRandomString = (length) => {
     return crypto
@@ -86,37 +86,49 @@ app.get('/callback', function(req, res) {
         },
         json: true
       };
-  
+
       request.post(authOptions, function(error, response, body) {
         if (!error && response.statusCode === 200) {
-  
-          let access_token = body.access_token,
-              refresh_token = body.refresh_token;
-  
-          let options = {
-            url: 'https://api.spotify.com/v1/me',
-            headers: { 'Authorization': 'Bearer ' + access_token },
-            json: true
-          };
-  
-          // use the access token to access the Spotify Web API
-          request.get(options, function(error, response, body) {
-            console.log(body);
-          });
-  
-          // we can also pass the token to the browser to make requests from there
-          res.redirect('/#' +
-            querystring.stringify({
-              access_token: access_token,
-              refresh_token: refresh_token
-            }));
+            let access_token = body.access_token,
+                refresh_token = body.refresh_token;
+
+            // Use the access token to get user details
+            let options = {
+                url: 'https://api.spotify.com/v1/me',
+                headers: { 'Authorization': 'Bearer ' + access_token },
+                json: true
+            };
+
+            request.get(options, async function(error, response, userBody) {
+                if (!error && response.statusCode === 200) {
+                    // Save user details and access token to the database
+                    try {
+                        let result = await pool.query(
+                            'INSERT INTO accountinfo (spotify_id, display_name, access_token, refresh_token) VALUES ($1, $2, $3, $4) ON CONFLICT (spotify_id) DO NOTHING RETURNING *',
+                            [userBody.id, userBody.display_name, access_token, refresh_token]
+                        );                        
+                        res.redirect('/feed.html');
+                    } catch (dbError) {
+                        console.error('Error saving user details to the database:', dbError);
+                        res.redirect('/#' +
+                            querystring.stringify({
+                                error: 'db_error'
+                            }));
+                    }
+                } else {
+                    res.redirect('/#' +
+                        querystring.stringify({
+                            error: 'invalid_user_data'
+                        }));
+                }
+            });
         } else {
-          res.redirect('/#' +
-            querystring.stringify({
-              error: 'invalid_token'
-            }));
-        }
-      });
+            res.redirect('/#' +
+                querystring.stringify({
+                    error: 'invalid_token'
+                }));
+            }
+        });
     }
 });
 

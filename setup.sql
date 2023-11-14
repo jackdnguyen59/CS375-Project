@@ -7,6 +7,8 @@ CREATE TABLE posts (
 );
 CREATE TABLE accountinfo (
     id SERIAL PRIMARY KEY,
-    username VARCHAR(15),
-    hashedPassword VARCHAR(100)
+    spotify_id VARCHAR(255) UNIQUE NOT NULL,
+    display_name VARCHAR(255),
+    access_token VARCHAR(255),
+    refresh_token VARCHAR(255)
 );
