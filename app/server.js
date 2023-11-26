@@ -7,10 +7,13 @@ let crypto = require('crypto');
 let cors = require('cors');
 let querystring = require('querystring');
 let cookieParser = require('cookie-parser');
+let ejs = require('ejs');
 
-let client_id = '096e467573ed4dd8aa8bb1e452cb0996';
-let client_secret = '234f5df19988444e840d92b7f61a6648';
-let redirect_uri = 'http://localhost:3000/callback';
+let env = require("../env.json");
+
+let client_id = env.CLIENT_ID;
+let client_secret = env.CLIENT_SECRET;
+let redirect_uri = env.REDIRECT_URI;
 
 let generateRandomString = (length) => {
     return crypto
@@ -27,11 +30,13 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use(express.static(__dirname + '/public'))
    .use(cors())
    .use(cookieParser());
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
+
 
 let port = 3000;
 let hostname = "localhost";
 
-let env = require("../env.json");
 let { response } = require("express");
 let Pool = pg.Pool;
 let pool = new Pool(env);
@@ -107,7 +112,7 @@ app.get('/callback', function(req, res) {
                             'INSERT INTO accountinfo (spotify_id, display_name, access_token, refresh_token) VALUES ($1, $2, $3, $4) ON CONFLICT (spotify_id) DO NOTHING RETURNING *',
                             [userBody.id, userBody.display_name, access_token, refresh_token]
                         );                        
-                        res.redirect('/feed.html');
+                        res.render('feed', { user: userBody });
                     } catch (dbError) {
                         console.error('Error saving user details to the database:', dbError);
                         res.redirect('/#' +
