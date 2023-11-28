@@ -191,6 +191,12 @@ app.post("/login", (req, res) => {
 });
 */
 
+app.get("/feed", (req, res) => {
+  pool.query("SELECT * FROM posts").then(result => {
+    res.status(200).json({rows: result.rows});
+  });
+});
+
 app.post("/feed", (req, res) => {
   console.log("POST request body: ", req.body);
   let post = req.body.post;
@@ -213,6 +219,7 @@ app.post("/feed", (req, res) => {
     });
 });
 
+/*
 let saltRounds = 10;
 
 app.post("/signup", (req, res) => {
@@ -259,6 +266,7 @@ app.post("/signup", (req, res) => {
         });
     }
 })
+*/
 
 app.listen(port, hostname, () => {
   console.log(`http://${hostname}:${port}`);

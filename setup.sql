@@ -3,6 +3,7 @@ CREATE DATABASE userdata;
 \c userdata
 CREATE TABLE posts (
 	id SERIAL PRIMARY KEY,
+    author VARCHAR(30),
 	post VARCHAR(250)
 );
 CREATE TABLE accountinfo (
