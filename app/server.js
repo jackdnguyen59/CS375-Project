@@ -235,9 +235,10 @@ app.post("/feed", (req, res) => {
     });
 });
 
-app.get("profile", (req, res) => {
+app.get("/profile", (req, res) => {
   //console.log("hello");
   let id = req.cookies.id;
+
 
   //console.log("id number: " + id);
 
@@ -249,7 +250,7 @@ app.get("profile", (req, res) => {
     .then((result) => {
       //console.log(result.rows);
       console.log(result.rows[0].display_name)
-      res.render("views/profile", { user: result.rows[0] });
+      res.render("profile", { user: result.rows[0] });
     });
 });
 
