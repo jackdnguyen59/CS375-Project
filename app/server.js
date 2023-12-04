@@ -124,7 +124,7 @@ app.get("/callback", function (req, res) {
               //console.log(userBody);
               //res.cookie("id", userBody.id);
               //res.render("feed", { user: userBody });
-              res.redirect('/feed-rendered');
+              res.redirect("/timeline");
             } catch (dbError) {
               console.error(
                 "Error saving user details to the database:",
@@ -237,7 +237,7 @@ app.get("/feed", (req, res) => {
   });
 });
 
-app.get("/feed-rendered", async (req, res) => {
+app.get("/timeline", async (req, res) => {
   try {
     let userId = req.cookies.id;
 
