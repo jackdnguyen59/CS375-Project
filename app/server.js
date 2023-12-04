@@ -122,8 +122,9 @@ app.get("/callback", function (req, res) {
                 ]
               );
               //console.log(userBody);
-              res.cookie("id", userBody.id);
-              res.render("feed", { user: userBody });
+              //res.cookie("id", userBody.id);
+              //res.render("feed", { user: userBody });
+              res.redirect('/feed-rendered');
             } catch (dbError) {
               console.error(
                 "Error saving user details to the database:",
@@ -213,10 +214,44 @@ app.post("/login", (req, res) => {
 });
 */
 
+async function getUserDetailsFromDatabase(userId) {
+    try {
+        let queryResult = await pool.query(
+            "SELECT * FROM accountinfo WHERE spotify_id = $1",
+            [userId]
+        );
+
+        if (queryResult.rows.length > 0) {
+            return queryResult.rows[0];
+        } else {
+            throw new Error("User not found");
+        }
+    } catch (error) {
+        throw error;
+    }
+}
+
 app.get("/feed", (req, res) => {
   pool.query("SELECT * FROM posts").then(result => {
     res.status(200).json({rows: result.rows});
   });
+});
+
+app.get("/feed-rendered", async (req, res) => {
+  try {
+    let userId = req.cookies.id;
+
+    if (!userId) {
+      return res.status(401).send("User not authenticated");
+    }
+
+    let user = await getUserDetailsFromDatabase(userId);
+
+    res.render("feed", { user });
+  } catch (error) {
+    console.error("Error fetching user details:", error);
+    res.status(500).send("Internal Server Error");
+  }
 });
 
 app.post("/feed", (req, res) => {
@@ -241,24 +276,25 @@ app.post("/feed", (req, res) => {
     });
 });
 
-app.get("/profile", (req, res) => {
-  //console.log("hello");
-  let id = req.cookies.id;
+app.get("/profile", async (req, res) => {
+    //console.log("hello");
+    try {
+      let userId = req.cookies.id;
 
+      //console.log("id number: " + id);
 
-  //console.log("id number: " + id);
-
-  pool
-    .query(
-      `SELECT spotify_id, display_name, access_token, refresh_token FROM accountinfo WHERE spotify_id= $1`,
-      [id]
-    )
-    .then((result) => {
-      //console.log(result.rows);
-      console.log(result.rows[0].display_name)
-      res.render("profile", { user: result.rows[0] });
-    });
-});
+      if (!userId) {
+        return res.status(401).send("User not authenticated");
+      }
+  
+      let user = await getUserDetailsFromDatabase(userId);
+  
+      res.render("profile", { user });
+    } catch (error) {
+      console.error("Error fetching user details:", error);
+      res.status(500).send("Internal Server Error");
+    }
+});  
 
 /*
 let saltRounds = 10;
