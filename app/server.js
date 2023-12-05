@@ -122,7 +122,7 @@ app.get("/callback", function (req, res) {
                 ]
               );
               //console.log(userBody);
-              //res.cookie("id", userBody.id);
+              res.cookie("id", userBody.id);
               //res.render("feed", { user: userBody });
               res.redirect("/timeline");
             } catch (dbError) {
