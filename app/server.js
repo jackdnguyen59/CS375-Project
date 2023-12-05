@@ -290,11 +290,10 @@ app.get("/profile", async (req, res) => {
       let user = await getUserDetailsFromDatabase(userId);
 
       let userPosts = await pool.query(
-        "SELECT * FROM posts WHERE spotify_id = $1",
+        "SELECT spotify_id, post FROM posts WHERE spotify_id = $1",
         [userId]
       );
       
-      console.log(userPosts);
       res.render("profile", { user, userPosts });
 
     } catch (error) {

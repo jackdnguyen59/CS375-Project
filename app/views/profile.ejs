@@ -6,6 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" type="text/css" href="profile.css">
     <title>Musify - Profile</title>
+    <style>
+        table, th, tr, td {
+            border-collapse: collapse;
+            border: 1px solid;
+            padding: 8px
+        }
+
+    </style>
 </head>
 <body>
     <h1>My Profile</h1>
@@ -13,13 +21,12 @@
     <p>Spotify ID: <%= user.spotify_id %></p>
     <script src = "profile.js"></script>
 
-    <table>
-        <% for(const obj of userPosts.rows){ %>
+    <table id = "posts">
             <tr>
-             <% for(const key in obj) { %>
-              <th><%= key %></th>
-             <% } %>
+              <th>Spotify ID</th>
+              <th>Post</th>
             </tr>
+            <% for(const obj of userPosts.rows){ %>
             <tr>
             <% for(const key in obj) { %>
              <td><%= obj[key] %></td>
