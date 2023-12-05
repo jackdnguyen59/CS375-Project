@@ -12,5 +12,20 @@
     <p>Display Name: <%= user.display_name %></p>
     <p>Spotify ID: <%= user.spotify_id %></p>
     <script src = "profile.js"></script>
+
+    <table>
+        <% for(const obj of userPosts.rows){ %>
+            <tr>
+             <% for(const key in obj) { %>
+              <th><%= key %></th>
+             <% } %>
+            </tr>
+            <tr>
+            <% for(const key in obj) { %>
+             <td><%= obj[key] %></td>
+            <% } %>
+            </tr>
+           <% } %> 
+    </table>
 </body>
 </html>

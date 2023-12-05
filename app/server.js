@@ -261,10 +261,10 @@ app.post("/feed", (req, res) => {
 
   pool
     .query(
-      `INSERT INTO posts (post) 
-       VALUES ($1)
+      `INSERT INTO posts (post, spotify_id) 
+       VALUES ($1, $2)
        RETURNING *`,
-      [post]
+      [post, req.cookies.id]
     )
     .then((result) => {
       res.status(200).send();
@@ -288,8 +288,15 @@ app.get("/profile", async (req, res) => {
       }
   
       let user = await getUserDetailsFromDatabase(userId);
-  
-      res.render("profile", { user });
+
+      let userPosts = await pool.query(
+        "SELECT * FROM posts WHERE spotify_id = $1",
+        [userId]
+      );
+      
+      console.log(userPosts);
+      res.render("profile", { user, userPosts });
+
     } catch (error) {
       console.error("Error fetching user details:", error);
       res.status(500).send("Internal Server Error");
