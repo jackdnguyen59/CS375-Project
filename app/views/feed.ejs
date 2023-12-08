@@ -13,12 +13,14 @@
     <button id = "submit">Post!</button>
     <h2>Posts</h2>
 
-    <table>
-        <thead>
-            <tr><th>ID</th><th>Content</th></tr>
-        </thead>
-        <tbody id = "posts"></tbody>
-    </table>
+    <div class="feed-container">
+        <% userPosts.rows.forEach(post => { %>
+            <div class="post">
+                <p><strong>@</strong><strong><%= post.spotify_id %></strong></p>
+                <p><strong></strong><%= post.post %></p>
+            </div>
+        <% }) %>
+    </div>
 
     <a href="/profile" class="profile-button">Profile</a>
 

@@ -35,7 +35,7 @@ let port = 3000;
 let hostname = "localhost";
 
 let { response } = require("express");
-const { parseArgs } = require("util");
+let { parseArgs } = require("util");
 let Pool = pg.Pool;
 let pool = new Pool(env);
 pool.connect().then(function () {
@@ -187,33 +187,6 @@ app.get("/refresh_token", function (req, res) {
   });
 });
 
-/*
-app.post("/login", (req, res) => {
-    let { username, password } = req.body;
-
-    pool.query('SELECT * FROM accountinfo WHERE username = $1', [username])
-        .then((result) => {
-            let user = result.rows[0];
-
-            if (!user) {
-                res.status(401).send({error: "Invalid credentials"});
-            } else {
-                bcrypt.compare(password, user.hashedpassword, (err, result) => {
-                    if (result) {
-                        res.status(200).send({message: "Login successful"});
-                    } else {
-                        res.status(401).send({error: "Invalid credentials"});
-                    }
-                });
-            }
-        })
-        .catch((error) => {
-            console.log(error);
-            res.status(500).send();
-        });
-});
-*/
-
 async function getUserDetailsFromDatabase(userId) {
     try {
         let queryResult = await pool.query(
@@ -231,27 +204,37 @@ async function getUserDetailsFromDatabase(userId) {
     }
 }
 
-app.get("/feed", (req, res) => {
-  pool.query("SELECT * FROM posts").then(result => {
-    res.status(200).json({rows: result.rows});
-  });
+app.get("/feed", async (req, res) => {
+    try {
+        let posts = await pool.query("SELECT * FROM posts");
+        res.status(200).json(posts.rows);
+    } catch (error) {
+        console.error("Error fetching posts:", error);
+        res.status(500).send("Internal Server Error");
+    }
 });
 
+
 app.get("/timeline", async (req, res) => {
-  try {
-    let userId = req.cookies.id;
-
-    if (!userId) {
-      return res.status(401).send("User not authenticated");
+    try {
+      let userId = req.cookies.id;
+  
+      if (!userId) {
+        return res.status(401).send("User not authenticated");
+      }
+  
+      let user = await getUserDetailsFromDatabase(userId);
+  
+      let userPosts = await pool.query(
+        "SELECT spotify_id, post FROM posts WHERE spotify_id = $1",
+        [userId]
+      );
+  
+      res.render("feed", { user, userPosts });
+    } catch (error) {
+      console.error("Error fetching user details:", error);
+      res.status(500).send("Internal Server Error");
     }
-
-    let user = await getUserDetailsFromDatabase(userId);
-
-    res.render("feed", { user });
-  } catch (error) {
-    console.error("Error fetching user details:", error);
-    res.status(500).send("Internal Server Error");
-  }
 });
 
 app.post("/feed", (req, res) => {
@@ -301,52 +284,6 @@ app.get("/profile", async (req, res) => {
       res.status(500).send("Internal Server Error");
     }
 });  
-
-/*
-let saltRounds = 10;
-
-app.post("/signup", (req, res) => {
-  let username = req.body.username;
-  let plaintextPassword = req.body.plaintextPassword;
-  let confirmPassword = req.body.confirmPassword;
-
-  if (!username instanceof String || !plaintextPassword instanceof String) {
-    console.log("not string");
-    res.status(401).send();
-  } else if (username.length < 4 || username.length > 15) {
-    console.log("invalid username length");
-    res.status(401).send();
-  } else if (plaintextPassword.length < 4) {
-    console.log("invalid password length");
-    res.status(401).send();
-  } else if (plaintextPassword != confirmPassword) {
-    console.log("passwords dont match");
-    res.status(401).send();
-  } else {
-    bcrypt
-      .hash(plaintextPassword, saltRounds)
-      .then((hashedPassword) => {
-        pool
-          .query(
-            "INSERT INTO accountinfo (username, hashedPassword) VALUES ($1, $2)",
-            [username, hashedPassword]
-          )
-          .then(() => {
-            console.log(username, "account created");
-            res.status(200).send();
-          })
-          .catch((error) => {
-            console.log(error);
-            res.status(500).send();
-          });
-      })
-      .catch((error) => {
-        console.log(error);
-        res.status(500).send();
-      });
-  }
-});
-*/
 
 app.listen(port, hostname, () => {
   console.log(`http://${hostname}:${port}`);

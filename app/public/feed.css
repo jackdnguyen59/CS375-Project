@@ -1,10 +1,37 @@
-table {
-	border-collapse: collapse;
+.feed-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
 
-th, td, tr {
-	border: 1px solid black;
-	padding: 10px;
+.post {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.post-content {
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+.post-metadata {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 12px;
+    color: #777;
+    font-size: 14px;
+}
+
+.post-user {
+    font-weight: bold;
+}
+
+.post-date {
+
 }
 
 body {

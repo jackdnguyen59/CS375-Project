@@ -1,68 +1,58 @@
-// note: ID's post and posts might be confusing, will review later
-let post = document.getElementById("submit");
-let table = document.getElementById("posts");
+let postButton = document.getElementById("submit");
+let postInput = document.getElementById("post");
+let postsContainer = document.querySelector(".feed-container");
 
-// note: -
-
-function addPost(){
-    let text = document.getElementById("post");
+function addPost() {
+    let text = postInput.value;
 
     fetch("/feed", {
         method: "POST",
         headers: {
             'Content-Type': "application/json"
         },
-        body: JSON.stringify({"post": text.value})
-
+        body: JSON.stringify({ "post": text })
     }).then((response) => {
-        console.log(response);
+        if (response.ok) {
+            console.log("Post added successfully!");
+            displayAllPosts();
+        } else {
+            console.error("Failed to add post!");
+        }
     }).catch((error) => {
-        console.log(error);
-    })
+        console.error("Error:", error);
+    });
 
+    postInput.value = "";
 }
 
 function displayAllPosts() {
     fetch("/feed").then(response => {
         return response.json();
     }).then(body => {
-        let postList = Object.values(body);
-        
-        clearTable(); // this is probably only needed if you have it on button press
-
-        for (const tweet of postList[0]) { // maybe take note of time when posted
-            console.log(tweet);
-            let row = document.createElement("tr");
-            let postText = document.createElement("td");
-            let postId = document.createElement("td"); // this would eventually be postAuthor
-
-            postText.textContent = tweet.post;
-            postId.textContent = tweet.id;
-
-            row.append(postId);
-            row.append(postText);
-            table.append(row);
+        clearPostsContainer();
+        for (let post of body) {
+            let postElement = createPostElement(post);
+            postsContainer.appendChild(postElement);
         }
     }).catch(error => {
-        console.log(error);
+        console.error("Error fetching posts:", error);
     });
 }
 
-function displayYourPosts() {
-    //
+function createPostElement(post) {
+    let postDiv = document.createElement("div");
+    postDiv.classList.add("post");
+    postDiv.innerHTML = `
+        <p><strong>@</strong><strong>${post.spotify_id}</strong></p>
+        <p><strong></strong>${post.post}</p>
+    `;
+    return postDiv;
 }
 
-function clearTable() {
-    let rowCount = table.rows.length;
-
-    for (let i = rowCount - 1; i >= 0; i--) {
-        table.deleteRow(i);
-    }
+function clearPostsContainer() {
+    postsContainer.innerHTML = "";
 }
 
-post.addEventListener("click", () => {
-    addPost();
-    displayAllPosts();
-});
+postButton.addEventListener("click", addPost);
 
 displayAllPosts();

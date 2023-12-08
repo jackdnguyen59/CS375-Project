@@ -21,18 +21,14 @@
     <p>Spotify ID: <%= user.spotify_id %></p>
     <script src = "profile.js"></script>
 
-    <table id = "posts">
-            <tr>
-              <th>Spotify ID</th>
-              <th>Post</th>
-            </tr>
-            <% for(const obj of userPosts.rows){ %>
-            <tr>
-            <% for(const key in obj) { %>
-             <td><%= obj[key] %></td>
-            <% } %>
-            </tr>
-           <% } %> 
-    </table>
+    <div class="table-container">
+        <% userPosts.rows.forEach(post => { %>
+            <div class="post">
+                <p><strong>@</strong><strong><%= post.spotify_id %></strong></p>
+                <p><strong></strong><%= post.post %></p>
+            </div>
+        <% }) %>
+    </div>
+    </div>
 </body>
 </html>
