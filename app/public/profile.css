@@ -11,6 +11,10 @@ body {
     margin-bottom: 30px;
 }
 
+.posts-heading {
+    margin-bottom: 0px;
+}
+
 .post {
     border: 1px solid #168f48;
     border-radius: 8px;

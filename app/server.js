@@ -272,7 +272,7 @@ async function fetchTokensFromDatabase() {
     } catch (error) {
       throw error;
     }
-}
+  }
 
 fetchTokensFromDatabase()
 .then(tokens => {
@@ -296,7 +296,6 @@ fetchTokensFromDatabase()
 })
 .catch(error => {
     console.error('Error fetching tokens from the database:', error);
-    // Handle the error accordingly or set default tokens if needed
 });
 
 async function getUserDetailsFromDatabase(userId) {
@@ -325,9 +324,6 @@ async function fetchUserProfilePicture(accessToken) {
   
       let response = await axios.get(options.url, { headers: options.headers });
 
-      //console.log("Spotify API response:", response);
-      //console.log("Spotify API response body:", response.data);
-  
       if (response && response.data && response.data.images && response.data.images.length > 0) {
         return response.data.images[1].url;
       } else {
