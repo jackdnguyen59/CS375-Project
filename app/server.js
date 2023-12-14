@@ -8,6 +8,7 @@ let cors = require("cors");
 let querystring = require("querystring");
 let cookieParser = require("cookie-parser");
 let ejs = require("ejs");
+let axios = require('axios');
 
 let env = require("../env.json");
 
@@ -98,8 +99,8 @@ app.get("/callback", function (req, res) {
 
     request.post(authOptions, function (error, response, body) {
       if (!error && response.statusCode === 200) {
-        let access_token = body.access_token,
-          refresh_token = body.refresh_token;
+        let access_token = body.access_token;
+        let refresh_token = body.refresh_token;
 
         // Use the access token to get user details
         let options = {
@@ -159,33 +160,106 @@ app.get("/callback", function (req, res) {
 });
 
 app.get("/refresh_token", function (req, res) {
-  let refresh_token = req.query.refresh_token;
-  let authOptions = {
-    url: "https://accounts.spotify.com/api/token",
-    headers: {
-      "content-type": "application/x-www-form-urlencoded",
-      Authorization:
-        "Basic " +
-        new Buffer.from(client_id + ":" + client_secret).toString("base64"),
-    },
-    form: {
-      grant_type: "refresh_token",
-      refresh_token: refresh_token,
-    },
-    json: true,
-  };
-
-  request.post(authOptions, function (error, response, body) {
-    if (!error && response.statusCode === 200) {
-      let access_token = body.access_token,
-        refresh_token = body.refresh_token;
-      res.send({
-        access_token: access_token,
+    let refresh_token = req.query.refresh_token;
+    let authOptions = {
+      url: "https://accounts.spotify.com/api/token",
+      headers: {
+        "content-type": "application/x-www-form-urlencoded",
+        Authorization:
+          "Basic " +
+          new Buffer.from(client_id + ":" + client_secret).toString("base64"),
+      },
+      form: {
+        grant_type: "refresh_token",
         refresh_token: refresh_token,
+      },
+      json: true,
+    };
+  
+    request.post(authOptions, function (error, response, body) {
+      if (!error && response.statusCode === 200) {
+        let access_token = body.access_token,
+          refreshed_refresh_token = body.refresh_token;
+  
+        pool.query(
+          "UPDATE accountinfo SET access_token = $1 WHERE refresh_token = $2",
+          [access_token, refresh_token],
+          (err, result) => {
+            if (err) {
+              console.error("Error updating access token:", err);
+              res.status(500).send("Internal Server Error");
+            } else {
+              res.send({
+                access_token: access_token,
+                refresh_token: refreshed_refresh_token,
+              });
+            }
+          }
+        );
+      } else {
+        res.status(response.statusCode).send({ error: "Invalid refresh token" });
+      }
+    });
+});  
+
+async function refreshAccessToken(refreshToken) {
+    return new Promise((resolve, reject) => {
+      request.get(
+        `http://localhost:3000/refresh_token?refresh_token=${refreshToken}`,
+        (error, response, body) => {
+          if (!error && response.statusCode === 200) {
+            let newTokens = JSON.parse(body);
+            // Handle new tokens - update your current token with new access_token
+            resolve(newTokens.access_token);
+          } else {
+            reject(error || body);
+          }
+        }
+      );
+    });
+}
+
+async function checkAccessTokenValidity(accessToken) {
+    try {
+      let response = await fetch('https://api.spotify.com/v1/me', {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
       });
+  
+      if (!response.ok) {
+        throw new Error('Invalid access token');
+      }
+  
+      let userData = await response.json();
+      return userData;
+    } catch (error) {
+      console.error('Error checking access token validity:', error.message);
+      throw error;
     }
-  });
+}  
+
+// If you want to test your access token validity, uncomment this and replace token strings
+/*
+let expiredToken = 'BQAomJB0Kvr_xKi0MV9hHLK3w15cqpVwSxcduSIQA1eGLKPwKLc47dahvPz5u_WgFHcFg_yDkyV1t2jtB8MwpMp4TDpSMVxtSsJ6HFBkUQBfFpHOVm8Ne9MgtzDg9K9VHbRW6mHYuZK5WLjsYmu3IHHJmkCvMPFaiFT9DYcsIB_h0ZW5TFuvy1x-n3BAaNFfnFG-tQ';
+let refreshToken = 'AQCbM-XENiGmBh5VKUYm0-WkWSTn7hob5DEf6k53CG433wcijn4h8fhHQDcEG968NcQeOef1wBL0Ow9fKx--EXiUkiXalr6T3e1uPlYZ0Ty3rJFFvmK3gvuTl-GPAVbUppY';
+
+// Check the token validity or expiration
+checkAccessTokenValidity(expiredToken)
+.then(() => {
+    console.log('Access token is valid');
+})
+.catch(() => {
+    console.log('Access token is invalid or expired');
+    refreshAccessToken(refreshToken)
+    .then((newAccessToken) => {
+        console.log('Refreshed access token:', newAccessToken);
+    })
+    .catch((refreshError) => {
+        console.error('Error refreshing access token:', refreshError);
+    });
 });
+*/
 
 async function getUserDetailsFromDatabase(userId) {
     try {
@@ -204,6 +278,29 @@ async function getUserDetailsFromDatabase(userId) {
     }
 }
 
+async function fetchUserProfilePicture(accessToken) {
+    try {
+      let options = {
+        url: "https://api.spotify.com/v1/me",
+        headers: { Authorization: `Bearer ${accessToken}` },
+      };
+  
+      let response = await axios.get(options.url, { headers: options.headers });
+
+      //console.log("Spotify API response:", response);
+      //console.log("Spotify API response body:", response.data);
+  
+      if (response && response.data && response.data.images && response.data.images.length > 0) {
+        return response.data.images[1].url;
+      } else {
+        return "URL_TO_DEFAULT_IMAGE";
+      }
+    } catch (error) {
+      console.error("Error fetching profile picture:", error);
+      throw error;
+    }
+}
+  
 app.get("/feed", async (req, res) => {
     try {
         let posts = await pool.query("SELECT * FROM posts");
@@ -214,26 +311,33 @@ app.get("/feed", async (req, res) => {
     }
 });
 
-
 app.get("/timeline", async (req, res) => {
     try {
-      let userId = req.cookies.id;
-  
-      if (!userId) {
-        return res.status(401).send("User not authenticated");
-      }
-  
-      let user = await getUserDetailsFromDatabase(userId);
-  
-      let userPosts = await pool.query(
-        "SELECT spotify_id, post FROM posts WHERE spotify_id = $1",
-        [userId]
-      );
-  
-      res.render("feed", { user, userPosts });
+        let userId = req.cookies.id;
+        
+        let queryResult = await pool.query(
+            "SELECT access_token, spotify_id FROM accountinfo WHERE spotify_id = $1",
+            [userId]
+        );
+        
+        if (queryResult.rows.length > 0) {
+            let { access_token } = queryResult.rows[0];
+            
+            let profilePicture = await fetchUserProfilePicture(access_token);
+            
+            let user = await getUserDetailsFromDatabase(userId);
+            let userPosts = await pool.query(
+                "SELECT spotify_id, post FROM posts WHERE spotify_id = $1",
+                [userId]
+            );
+            
+            res.render("feed", { user, userPosts, profilePicture });
+        } else {
+            res.status(404).send("Access token not found for the user");
+        }
     } catch (error) {
-      console.error("Error fetching user details:", error);
-      res.status(500).send("Internal Server Error");
+        console.error("Error fetching timeline:", error);
+        res.status(500).send("Internal Server Error");
     }
 });
 
@@ -260,27 +364,36 @@ app.post("/feed", (req, res) => {
 });
 
 app.get("/profile", async (req, res) => {
-    //console.log("hello");
     try {
       let userId = req.cookies.id;
-
-      //console.log("id number: " + id);
-
+  
       if (!userId) {
         return res.status(401).send("User not authenticated");
       }
   
-      let user = await getUserDetailsFromDatabase(userId);
-
-      let userPosts = await pool.query(
-        "SELECT spotify_id, post FROM posts WHERE spotify_id = $1",
+      let queryResult = await pool.query(
+        "SELECT access_token, spotify_id FROM accountinfo WHERE spotify_id = $1",
         [userId]
       );
-      
-      res.render("profile", { user, userPosts });
-
+  
+      if (queryResult.rows.length > 0) {
+        let { access_token } = queryResult.rows[0];
+  
+        let user = await getUserDetailsFromDatabase(userId);
+  
+        let userPosts = await pool.query(
+          "SELECT spotify_id, post FROM posts WHERE spotify_id = $1",
+          [userId]
+        );
+  
+        let profilePicture = await fetchUserProfilePicture(access_token);
+  
+        res.render("profile", { user, userPosts, profilePicture });
+      } else {
+        res.status(404).send("Access token not found for the user");
+      }
     } catch (error) {
-      console.error("Error fetching user details:", error);
+      console.error("Error fetching user profile:", error);
       res.status(500).send("Internal Server Error");
     }
 });  

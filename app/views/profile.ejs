@@ -6,20 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" type="text/css" href="profile.css">
     <title>Musify - Profile</title>
-    <style>
-        table, th, tr, td {
-            border-collapse: collapse;
-            border: 1px solid;
-            padding: 8px
-        }
 
-    </style>
 </head>
 <body>
     <h1>My Profile</h1>
+    <img src="<%= profilePicture %>" id="profile-pic" alt="User Profile Picture">
     <p>Display Name: <%= user.display_name %></p>
     <p>Spotify ID: <%= user.spotify_id %></p>
-    <script src = "profile.js"></script>
 
     <div class="table-container">
         <% userPosts.rows.forEach(post => { %>
@@ -29,6 +22,6 @@
             </div>
         <% }) %>
     </div>
-    </div>
+    <script src = "profile.js"></script>
 </body>
 </html>
