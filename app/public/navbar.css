@@ -1,0 +1,56 @@
+body,
+.navbar {
+  margin: 0;
+  padding: 0;
+}
+
+.navbar-container {
+  width: 100%;
+  position: relative;
+}
+
+.navbar {
+  background-color: #333;
+  padding: 15px 20px;
+}
+
+.navbar-nav {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+.navbar-nav li {
+  display: inline;
+  margin-right: 20px;
+}
+
+.navbar-nav li a {
+  color: #fff;
+  text-decoration: none;
+  font-size: 15px;
+}
+
+.profile-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: #20bb60;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+    margin-left: auto;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+  }
+  
+.profile-button:hover {
+    background-color: #168f48;
+}

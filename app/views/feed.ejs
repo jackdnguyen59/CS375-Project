@@ -5,24 +5,30 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" type="text/css" href="feed.css">
+    <link rel="stylesheet" href="navbar.css">
     <title>Musify - Timeline</title>
 </head>
 <body>
-    <h1>Welcome, <%= user.display_name %>!</h1>
-    <input id = "post" type = "text" placeholder = "What's happening?"></input>
-    <button id = "submit">Post!</button>
-    <h2>Posts</h2>
+    <div class="navbar-container">
+        <%- include('navbar') %>
+    </div>
+    
+    <div class="feed-content">
+        <h1>Welcome, <%= user.display_name %>!</h1>
+        <input id="post" type="text" placeholder="What's happening?"></input>
+        <button id="submit">Post!</button>
+        <h2>Posts</h2>
 
-    <div class="feed-container">
-        <% userPosts.rows.forEach(post => { %>
-            <div class="post">
-                <p><strong>@</strong><strong><%= post.spotify_id %></strong></p>
-                <p><strong></strong><%= post.post %></p>
-            </div>
-        <% }) %>
+        <div class="feed-container">
+            <% userPosts.rows.forEach(post => { %>
+                <div class="post">
+                    <p><strong>@</strong><strong><%= post.spotify_id %></strong></p>
+                    <p><strong></strong><%= post.post %></p>
+                </div>
+            <% }) %>
+        </div>
     </div>
 
-    <a href="/profile" class="profile-button" style="background-image: url('<%= profilePicture %>')"></a>
 
     <script src = "feed.js"></script>
 

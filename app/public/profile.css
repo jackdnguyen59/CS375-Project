@@ -4,6 +4,12 @@ body {
     padding: 0;
 }
 
+.profile-content {
+    margin-top: 0px;
+    margin-left: 20px;
+    margin-right: 20px;
+}
+
 .table-container {
     display: flex;
     flex-direction: column;
