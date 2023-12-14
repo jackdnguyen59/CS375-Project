@@ -239,7 +239,7 @@ async function checkAccessTokenValidity(accessToken) {
     }
 }  
 
-// If you want to test your access token validity, uncomment this and replace token strings
+// If you want to test or refresh your access token validity, uncomment this and replace token strings
 /*
 let expiredToken = 'BQAomJB0Kvr_xKi0MV9hHLK3w15cqpVwSxcduSIQA1eGLKPwKLc47dahvPz5u_WgFHcFg_yDkyV1t2jtB8MwpMp4TDpSMVxtSsJ6HFBkUQBfFpHOVm8Ne9MgtzDg9K9VHbRW6mHYuZK5WLjsYmu3IHHJmkCvMPFaiFT9DYcsIB_h0ZW5TFuvy1x-n3BAaNFfnFG-tQ';
 let refreshToken = 'AQCbM-XENiGmBh5VKUYm0-WkWSTn7hob5DEf6k53CG433wcijn4h8fhHQDcEG968NcQeOef1wBL0Ow9fKx--EXiUkiXalr6T3e1uPlYZ0Ty3rJFFvmK3gvuTl-GPAVbUppY';
