@@ -359,7 +359,12 @@ async function fetchTopTracks(accessToken) {
 
 app.get("/feed", async (req, res) => {
     try {
-        let posts = await pool.query("SELECT * FROM posts");
+        let posts = await pool.query(
+          "SELECT spotify_id, post FROM posts WHERE spotify_id = $1 "
+          + "UNION "
+          + "SELECT posts.spotify_id, posts.post FROM posts JOIN followingdata ON posts.spotify_id = followingdata.is_following "
+          + "WHERE followingdata.spotify_id = $2", [req.cookies.id, req.cookies.id]
+          );
         res.status(200).json(posts.rows);
     } catch (error) {
         console.error("Error fetching posts:", error);
@@ -471,35 +476,40 @@ app.get("/:profile", async (req, res) => {
     if (!userId) {
       return res.status(401).send("User not authenticated");
     }
-    
-    let queryResult = await pool.query(
-      "SELECT access_token, spotify_id FROM accountinfo WHERE spotify_id = $1",
-      [userId]
-      );
-      
-    if (queryResult.rows.length > 0) {
-      let { access_token } = queryResult.rows[0];
 
-      let user = await getUserDetailsFromDatabase(userId);
-      let userPosts = await pool.query(
-        "SELECT spotify_id, post FROM posts WHERE spotify_id = $1",
+    if (userId === currentlySignedIn) {
+      res.redirect("/profile");
+    }
+    else {
+      let queryResult = await pool.query(
+        "SELECT access_token, spotify_id FROM accountinfo WHERE spotify_id = $1",
         [userId]
         );
-      
-      let profilePicture = await fetchUserProfilePicture(access_token);
-      let topArtists = await fetchTopArtists(access_token);
-      let topTracks = await fetchTopTracks(access_token);
-      
-      res.render("profile", {
-        user,
-        userPosts,
-        currentlySignedIn,
-        profilePicture,
-        topArtists,
-        topTracks,
-      });
-    } else {
-      res.status(404).send("Access token not found for the user");
+        
+      if (queryResult.rows.length > 0) {
+        let { access_token } = queryResult.rows[0];
+  
+        let user = await getUserDetailsFromDatabase(userId);
+        let userPosts = await pool.query(
+          "SELECT spotify_id, post FROM posts WHERE spotify_id = $1",
+          [userId]
+          );
+        
+        let profilePicture = await fetchUserProfilePicture(access_token);
+        let topArtists = await fetchTopArtists(access_token);
+        let topTracks = await fetchTopTracks(access_token);
+        
+        res.render("profile", {
+          user,
+          userPosts,
+          currentlySignedIn,
+          profilePicture,
+          topArtists,
+          topTracks,
+        });
+      } else {
+        res.status(404).send("Access token not found for the user");
+      }
     }
   } catch (error) {
     console.error("Error fetching user profile:", error);
