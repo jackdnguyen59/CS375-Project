@@ -421,44 +421,115 @@ app.post("/feed", (req, res) => {
 
 app.get("/profile", async (req, res) => {
     try {
-        let userId = req.cookies.id;
-
-        if (!userId) {
-            return res.status(401).send("User not authenticated");
-        }
-
-        let queryResult = await pool.query(
-            "SELECT access_token, spotify_id FROM accountinfo WHERE spotify_id = $1",
-            [userId]
+      let userId = req.cookies.id;
+      let currentlySignedIn = req.cookies.id;
+      
+      if (!userId) {
+        return res.status(401).send("User not authenticated");
+      }
+      
+      let queryResult = await pool.query(
+        "SELECT access_token, spotify_id FROM accountinfo WHERE spotify_id = $1",
+        [userId]
         );
+        
+      if (queryResult.rows.length > 0) {
+        let { access_token } = queryResult.rows[0];
 
-        if (queryResult.rows.length > 0) {
-            let { access_token } = queryResult.rows[0];
-
-            let user = await getUserDetailsFromDatabase(userId);
-            let userPosts = await pool.query(
-                "SELECT spotify_id, post FROM posts WHERE spotify_id = $1",
-                [userId]
-            );
-            let profilePicture = await fetchUserProfilePicture(access_token);
-
-            let topArtists = await fetchTopArtists(access_token);
-            let topTracks = await fetchTopTracks(access_token);
-
-            res.render("profile", {
-                user,
-                userPosts,
-                profilePicture,
-                topArtists,
-                topTracks,
-            });
-        } else {
-            res.status(404).send("Access token not found for the user");
-        }
+        let user = await getUserDetailsFromDatabase(userId);
+        let userPosts = await pool.query(
+          "SELECT spotify_id, post FROM posts WHERE spotify_id = $1",
+          [userId]
+          );
+        
+        let profilePicture = await fetchUserProfilePicture(access_token);
+        let topArtists = await fetchTopArtists(access_token);
+        let topTracks = await fetchTopTracks(access_token);
+        
+        res.render("profile", {
+          user,
+          userPosts,
+          currentlySignedIn,
+          profilePicture,
+          topArtists,
+          topTracks,
+        });
+      } else {
+        res.status(404).send("Access token not found for the user");
+      }
     } catch (error) {
-        console.error("Error fetching user profile:", error);
-        res.status(500).send("Internal Server Error");
+      console.error("Error fetching user profile:", error);
+      res.status(500).send("Internal Server Error");
     }
+});
+
+app.get("/:profile", async (req, res) => {
+  try {
+    let userId = req.params.profile;
+    let currentlySignedIn = req.cookies.id;
+    
+    if (!userId) {
+      return res.status(401).send("User not authenticated");
+    }
+    
+    let queryResult = await pool.query(
+      "SELECT access_token, spotify_id FROM accountinfo WHERE spotify_id = $1",
+      [userId]
+      );
+      
+    if (queryResult.rows.length > 0) {
+      let { access_token } = queryResult.rows[0];
+
+      let user = await getUserDetailsFromDatabase(userId);
+      let userPosts = await pool.query(
+        "SELECT spotify_id, post FROM posts WHERE spotify_id = $1",
+        [userId]
+        );
+      
+      let profilePicture = await fetchUserProfilePicture(access_token);
+      let topArtists = await fetchTopArtists(access_token);
+      let topTracks = await fetchTopTracks(access_token);
+      
+      res.render("profile", {
+        user,
+        userPosts,
+        currentlySignedIn,
+        profilePicture,
+        topArtists,
+        topTracks,
+      });
+    } else {
+      res.status(404).send("Access token not found for the user");
+    }
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+    res.status(500).send("Internal Server Error");
+  }
+});
+
+app.post("/follow", (req, res) => {
+let { user, following } = req.body;
+
+if (user === following) {
+  res.send(400);
+}
+if (user === null || following === null) {
+  res.send(400);
+}
+else {
+  const sql = 'INSERT INTO followingdata(spotify_id, is_following) VALUES($1, $2) RETURNING *'
+  const values = [user, following];
+  pool.query(sql, values)
+  .then((result) => {
+    console.log("Inserted:");
+    console.log(result.rows);
+  })
+  .catch((error) => {
+    console.log(error);
+  });
+}
+
+res.send();
 });
 
 app.listen(port, hostname, () => {
