@@ -22,6 +22,27 @@
             </div>
         <% }) %>
     </div>
+
+    <div class="top-section">
+        <div class="top-container">
+            <h2>Top Artists</h2>
+            <ul class="top-list">
+                <% topArtists.forEach(artist => { %>
+                    <li><%= artist.name %></li>
+                <% }) %>
+            </ul>
+        </div>
+    
+        <div class="top-container">
+            <h2>Top Tracks</h2>
+            <ul class="top-list">
+                <% topTracks.forEach(track => { %>
+                    <li><%= track.name %> by <%= track.artists[0].name %></li>
+                <% }) %>
+            </ul>
+        </div>
+    </div>
+
     <script src = "profile.js"></script>
 </body>
 </html>

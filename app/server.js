@@ -241,7 +241,7 @@ async function checkAccessTokenValidity(accessToken) {
 
 // If you want to test or refresh your access token validity, uncomment this and replace token strings
 /*
-let expiredToken = 'BQAomJB0Kvr_xKi0MV9hHLK3w15cqpVwSxcduSIQA1eGLKPwKLc47dahvPz5u_WgFHcFg_yDkyV1t2jtB8MwpMp4TDpSMVxtSsJ6HFBkUQBfFpHOVm8Ne9MgtzDg9K9VHbRW6mHYuZK5WLjsYmu3IHHJmkCvMPFaiFT9DYcsIB_h0ZW5TFuvy1x-n3BAaNFfnFG-tQ';
+let expiredToken = 'BQAZIpsxHlmA9XZ6D4EgLu979FcyhzPulXJdx3vFwMEcGoMnzvm82o3x9g8ywIWc5S_HRn_fwPCOq0vcYcvNupKBapFLMUDhCjuB0l24AQ_aTyeoC0ipK1OipV_xOFbIpJL3UJpt9PVgY0K94YrlbSMh0Zff2zFW35tt3k73b5KcijG8IOK_vF4ti_LV7A9I-newzZ9MZlE';
 let refreshToken = 'AQCbM-XENiGmBh5VKUYm0-WkWSTn7hob5DEf6k53CG433wcijn4h8fhHQDcEG968NcQeOef1wBL0Ow9fKx--EXiUkiXalr6T3e1uPlYZ0Ty3rJFFvmK3gvuTl-GPAVbUppY';
 
 // Check the token validity or expiration
@@ -260,6 +260,44 @@ checkAccessTokenValidity(expiredToken)
     });
 });
 */
+
+async function fetchTokensFromDatabase() {
+    try {
+      const result = await pool.query('SELECT access_token, refresh_token FROM accountinfo LIMIT 1');
+      if (result.rows.length > 0) {
+        const { access_token, refresh_token } = result.rows[0];
+        return { expiredToken: access_token, refreshToken: refresh_token };
+      }
+      throw new Error('Tokens not found in the database');
+    } catch (error) {
+      throw error;
+    }
+}
+
+fetchTokensFromDatabase()
+.then(tokens => {
+    let expiredToken = tokens.expiredToken;
+    let refreshToken = tokens.refreshToken;
+
+    checkAccessTokenValidity(expiredToken)
+    .then(() => {
+        console.log('Access token is valid');
+    })
+    .catch(() => {
+        console.log('Access token is invalid or expired');
+        refreshAccessToken(refreshToken)
+        .then(newAccessToken => {
+            console.log('Refreshed access token:', newAccessToken);
+        })
+        .catch(refreshError => {
+            console.error('Error refreshing access token:', refreshError);
+        });
+    });
+})
+.catch(error => {
+    console.error('Error fetching tokens from the database:', error);
+    // Handle the error accordingly or set default tokens if needed
+});
 
 async function getUserDetailsFromDatabase(userId) {
     try {
@@ -300,7 +338,29 @@ async function fetchUserProfilePicture(accessToken) {
       throw error;
     }
 }
-  
+
+async function fetchTopArtists(accessToken) {
+    try {
+        let response = await axios.get("https://api.spotify.com/v1/me/top/artists", {
+            headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        return response.data.items;
+    } catch (error) {
+        throw error;
+    }
+}
+
+async function fetchTopTracks(accessToken) {
+    try {
+        let response = await axios.get("https://api.spotify.com/v1/me/top/tracks", {
+            headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        return response.data.items;
+    } catch (error) {
+        throw error;
+    }
+}
+
 app.get("/feed", async (req, res) => {
     try {
         let posts = await pool.query("SELECT * FROM posts");
@@ -365,38 +425,45 @@ app.post("/feed", (req, res) => {
 
 app.get("/profile", async (req, res) => {
     try {
-      let userId = req.cookies.id;
-  
-      if (!userId) {
-        return res.status(401).send("User not authenticated");
-      }
-  
-      let queryResult = await pool.query(
-        "SELECT access_token, spotify_id FROM accountinfo WHERE spotify_id = $1",
-        [userId]
-      );
-  
-      if (queryResult.rows.length > 0) {
-        let { access_token } = queryResult.rows[0];
-  
-        let user = await getUserDetailsFromDatabase(userId);
-  
-        let userPosts = await pool.query(
-          "SELECT spotify_id, post FROM posts WHERE spotify_id = $1",
-          [userId]
+        let userId = req.cookies.id;
+
+        if (!userId) {
+            return res.status(401).send("User not authenticated");
+        }
+
+        let queryResult = await pool.query(
+            "SELECT access_token, spotify_id FROM accountinfo WHERE spotify_id = $1",
+            [userId]
         );
-  
-        let profilePicture = await fetchUserProfilePicture(access_token);
-  
-        res.render("profile", { user, userPosts, profilePicture });
-      } else {
-        res.status(404).send("Access token not found for the user");
-      }
+
+        if (queryResult.rows.length > 0) {
+            let { access_token } = queryResult.rows[0];
+
+            let user = await getUserDetailsFromDatabase(userId);
+            let userPosts = await pool.query(
+                "SELECT spotify_id, post FROM posts WHERE spotify_id = $1",
+                [userId]
+            );
+            let profilePicture = await fetchUserProfilePicture(access_token);
+
+            let topArtists = await fetchTopArtists(access_token);
+            let topTracks = await fetchTopTracks(access_token);
+
+            res.render("profile", {
+                user,
+                userPosts,
+                profilePicture,
+                topArtists,
+                topTracks,
+            });
+        } else {
+            res.status(404).send("Access token not found for the user");
+        }
     } catch (error) {
-      console.error("Error fetching user profile:", error);
-      res.status(500).send("Internal Server Error");
+        console.error("Error fetching user profile:", error);
+        res.status(500).send("Internal Server Error");
     }
-});  
+});
 
 app.listen(port, hostname, () => {
   console.log(`http://${hostname}:${port}`);

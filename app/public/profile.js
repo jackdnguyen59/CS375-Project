@@ -1,6 +1,7 @@
-fetch("profile")
+fetch("/profile")
     .then((response) => {
-        console.log("done");
-    }).catch((error) => {
-        console.log(error);
+        console.log("Profile data fetched successfully");
+    })
+    .catch((error) => {
+        console.log("Error fetching profile data:", error);
     });
