@@ -14,6 +14,7 @@ CREATE TABLE posts (
 	id SERIAL PRIMARY KEY,
 	post VARCHAR(250),
     spotify_id VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT LOCALTIMESTAMP,
     FOREIGN KEY(spotify_id) REFERENCES accountinfo(spotify_id)
 );
 

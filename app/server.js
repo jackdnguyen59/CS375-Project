@@ -52,7 +52,7 @@ app.get("/login", function (req, res) {
   let state = generateRandomString(16);
   res.cookie(stateKey, state);
 
-  let scope = "user-read-private user-read-email";
+  let scope = "user-read-private user-read-email user-top-read";
   res.redirect(
     "https://accounts.spotify.com/authorize?" +
       querystring.stringify({
@@ -242,13 +242,20 @@ async function checkAccessTokenValidity(accessToken) {
 
 // If you want to test or refresh your access token validity, uncomment this and replace token strings
 /*
-let expiredToken = 'BQAZIpsxHlmA9XZ6D4EgLu979FcyhzPulXJdx3vFwMEcGoMnzvm82o3x9g8ywIWc5S_HRn_fwPCOq0vcYcvNupKBapFLMUDhCjuB0l24AQ_aTyeoC0ipK1OipV_xOFbIpJL3UJpt9PVgY0K94YrlbSMh0Zff2zFW35tt3k73b5KcijG8IOK_vF4ti_LV7A9I-newzZ9MZlE';
-let refreshToken = 'AQCbM-XENiGmBh5VKUYm0-WkWSTn7hob5DEf6k53CG433wcijn4h8fhHQDcEG968NcQeOef1wBL0Ow9fKx--EXiUkiXalr6T3e1uPlYZ0Ty3rJFFvmK3gvuTl-GPAVbUppY';
+let expiredToken = 'BQAd15c178tbyxlTnuzHWFeRaB_OeZ-bkjedVIOVWg5nRkx0z5yUB9LCp8B-Covxia-9eSskYMidKOllXF92pnq-pcgH9NiNo_03o_0InjEX-Jj2aufUlwcYYxIsN3nwcy9y1P9LfsH_KQqw5wK4zQqK2MLRMHmm9R4zr5DKInHavGMsxFW00ArlJ8J5mA';
+let refreshToken = 'AQCcR6arKLXEPB4nTU-GDBVtTzdaa0niDk50n2Oe-HNcGrabwI-m0IMGv1Lr_dpDIx1jF-YD1NYwNr-WOE4FJycqBZzq3KAaAoDgrPrTy-2lLNmo5rGqwqEp3ohbgjLO59c';
 
 // Check the token validity or expiration
 checkAccessTokenValidity(expiredToken)
 .then(() => {
     console.log('Access token is valid');
+    refreshAccessToken(refreshToken)
+    .then((newAccessToken) => {
+        console.log('Refreshed access token:', newAccessToken);
+    })
+    .catch((refreshError) => {
+        console.error('Error refreshing access token:', refreshError);
+    });
 })
 .catch(() => {
     console.log('Access token is invalid or expired');
@@ -361,10 +368,11 @@ async function fetchTopTracks(accessToken) {
 app.get("/feed", async (req, res) => {
     try {
         let posts = await pool.query(
-          "SELECT spotify_id, post FROM posts WHERE spotify_id = $1 "
-          + "UNION "
-          + "SELECT posts.spotify_id, posts.post FROM posts JOIN followingdata ON posts.spotify_id = followingdata.is_following "
-          + "WHERE followingdata.spotify_id = $2", [req.cookies.id, req.cookies.id]
+          "SELECT spotify_id, post, created_at FROM posts WHERE spotify_id = $1 "
+          + "UNION ALL "
+          + "SELECT posts.spotify_id, posts.post, posts.created_at FROM posts JOIN followingdata ON posts.spotify_id = followingdata.is_following "
+          + "WHERE followingdata.spotify_id = $2 "
+          + "ORDER BY created_at DESC", [req.cookies.id, req.cookies.id]
           );
         res.status(200).json(posts.rows);
     } catch (error) {
@@ -389,7 +397,7 @@ app.get("/timeline", async (req, res) => {
             
             let user = await getUserDetailsFromDatabase(userId);
             let userPosts = await pool.query(
-                "SELECT spotify_id, post FROM posts WHERE spotify_id = $1",
+                "SELECT spotify_id, post, created_at FROM posts WHERE spotify_id = $1",
                 [userId]
             );
             
@@ -444,7 +452,7 @@ app.get("/profile", async (req, res) => {
 
         let user = await getUserDetailsFromDatabase(userId);
         let userPosts = await pool.query(
-          "SELECT spotify_id, post FROM posts WHERE spotify_id = $1",
+          "SELECT spotify_id, post, created_at FROM posts WHERE spotify_id = $1",
           [userId]
           );
         
@@ -492,7 +500,7 @@ app.get("/:profile", async (req, res) => {
   
         let user = await getUserDetailsFromDatabase(userId);
         let userPosts = await pool.query(
-          "SELECT spotify_id, post FROM posts WHERE spotify_id = $1",
+          "SELECT spotify_id, post, created_at FROM posts WHERE spotify_id = $1",
           [userId]
           );
         

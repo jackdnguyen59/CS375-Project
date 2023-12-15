@@ -45,6 +45,7 @@ function createPostElement(post) {
     postDiv.innerHTML = `
         <p><strong>@</strong><strong>${post.spotify_id}</strong></p>
         <p><strong></strong>${post.post}</p>
+        <p class="post-date"><strong></strong>${post.created_at}</p>
     `;
     return postDiv;
 }
