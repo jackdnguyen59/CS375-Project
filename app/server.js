@@ -44,7 +44,8 @@ pool.connect().then(function () {
 });
 
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+    res.clearCookie("id");
+    res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 app.get("/login", function (req, res) {
@@ -263,9 +264,9 @@ checkAccessTokenValidity(expiredToken)
 
 async function fetchTokensFromDatabase() {
     try {
-      const result = await pool.query('SELECT access_token, refresh_token FROM accountinfo LIMIT 1');
+      let result = await pool.query('SELECT access_token, refresh_token FROM accountinfo LIMIT 1');
       if (result.rows.length > 0) {
-        const { access_token, refresh_token } = result.rows[0];
+        let { access_token, refresh_token } = result.rows[0];
         return { expiredToken: access_token, refreshToken: refresh_token };
       }
       throw new Error('Tokens not found in the database');
@@ -518,28 +519,27 @@ app.get("/:profile", async (req, res) => {
 });
 
 app.post("/follow", (req, res) => {
-let { user, following } = req.body;
+    let { user, following } = req.body;
 
-if (user === following) {
-  res.send(400);
-}
-if (user === null || following === null) {
-  res.send(400);
-}
-else {
-  const sql = 'INSERT INTO followingdata(spotify_id, is_following) VALUES($1, $2) RETURNING *'
-  const values = [user, following];
-  pool.query(sql, values)
-  .then((result) => {
-    console.log("Inserted:");
-    console.log(result.rows);
-  })
-  .catch((error) => {
-    console.log(error);
-  });
-}
-
-res.send();
+    if (user === following) {
+        res.send(400);
+    }
+    if (user === null || following === null) {
+        res.send(400);
+    }
+    else {
+        let sql = 'INSERT INTO followingdata(spotify_id, is_following) VALUES($1, $2) RETURNING *'
+        let values = [user, following];
+        pool.query(sql, values)
+        .then((result) => {
+            console.log("Inserted:");
+            console.log(result.rows);
+        })
+        .catch((error) => {
+            console.log(error);
+        });
+    }
+    res.send();
 });
 
 app.listen(port, hostname, () => {
