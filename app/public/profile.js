@@ -12,6 +12,8 @@ function followUser() {
         body: JSON.stringify({user: currentUser, following: spotify_id}),
     }).then(response => {
         if (response.status === 200) {
+            followButton.innerHTML = 'Following';
+            followButton.disabled = true;
             console.log("Followed");
         }
         else {
@@ -22,13 +24,27 @@ function followUser() {
     });
 }
 
-if (currentUser === spotify_id) {
-    followButton.style.display = 'none';
-}
-else {
-    followButton.style.display = 'block';
+function showFollowButton() {
+    if (currentUser === spotify_id) {
+        followButton.style.display = 'none';
+    }
+    else {
+        followButton.style.display = 'block';
+    }
 }
 
+function checkIfFollowing() {
+    if (followButton.textContent === '1') {
+        followButton.innerHTML = 'Following';
+        followButton.disabled = true;
+    }
+    else {
+        followButton.innerHTML = 'Follow';
+    }
+}
+
+checkIfFollowing();
+showFollowButton();
 followButton.addEventListener("click", followUser);
 
 fetch("/profile")

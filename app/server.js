@@ -459,6 +459,17 @@ app.get("/profile", async (req, res) => {
         let profilePicture = await fetchUserProfilePicture(access_token);
         let topArtists = await fetchTopArtists(access_token);
         let topTracks = await fetchTopTracks(access_token);
+
+        let followCheck = 0;
+        let fcQuery = await pool.query("SELECT COUNT(*) FROM followingdata WHERE spotify_id = $1 AND is_following = $2",
+        [currentlySignedIn, userId])
+        .then((result) => {
+          followCheck = result.rows[0].count;
+          //console.log(result.rows[0].count);
+        })
+        .catch((error) => {
+          console.log(error);
+        })
         
         res.render("profile", {
           user,
@@ -467,6 +478,7 @@ app.get("/profile", async (req, res) => {
           profilePicture,
           topArtists,
           topTracks,
+          followCheck,
         });
       } else {
         res.status(404).send("Access token not found for the user");
@@ -508,6 +520,17 @@ app.get("/:profile", async (req, res) => {
         let topArtists = await fetchTopArtists(access_token);
         let topTracks = await fetchTopTracks(access_token);
         
+        let followCheck = 0;
+        let fcQuery = await pool.query("SELECT COUNT(*) FROM followingdata WHERE spotify_id = $1 AND is_following = $2",
+        [currentlySignedIn, userId])
+        .then((result) => {
+          followCheck = result.rows[0].count;
+          //console.log(result.rows[0].count);
+        })
+        .catch((error) => {
+          console.log(error);
+        })
+        
         res.render("profile", {
           user,
           userPosts,
@@ -515,6 +538,7 @@ app.get("/:profile", async (req, res) => {
           profilePicture,
           topArtists,
           topTracks,
+          followCheck,
         });
       } else {
         res.status(404).send("Access token not found for the user");
