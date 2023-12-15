@@ -29,7 +29,25 @@ body,
 }
 
 .navbar-nav li:last-child {
-  margin-right: 850px;
+  margin-right: auto;
+}
+
+.navbar-nav li a {
+  color: #fff;
+  text-decoration: none;
+  font-size: 15px;
+}
+
+.logout-button {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  margin-right: 10px;
+}
+
+.logout-button img {
+  width: 30px;
+  height: auto;
 }
 
 .navbar-nav li a {
