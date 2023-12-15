@@ -1,5 +1,6 @@
 let postButton = document.getElementById("submit");
 let postInput = document.getElementById("post");
+let songInput = document.getElementById("song");
 let postsContainer = document.querySelector(".feed-container");
 
 function addPost() {
@@ -23,6 +24,27 @@ function addPost() {
     });
 
     postInput.value = "";
+}
+
+function searchSong() {
+    let song = songInput.value;
+
+    fetch("/search", {
+        method: "POST",
+        headers: {
+            'Content-Type': "application/json"
+        },
+        body: JSON.stringify({ "song": song })
+    }).then((response) => {
+        if (response.ok) {
+            console.log(response.body)
+        } else {
+            console.error("Failed to search song!");
+        }
+    }).catch((error) => {
+        console.error("Error:", error);
+    });
+
 }
 
 function displayAllPosts() {
@@ -53,6 +75,9 @@ function clearPostsContainer() {
     postsContainer.innerHTML = "";
 }
 
-postButton.addEventListener("click", addPost);
+postButton.addEventListener("click", function (){
+    addPost()
+    searchSong()
+});
 
 displayAllPosts();

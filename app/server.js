@@ -51,7 +51,7 @@ app.get("/login", function (req, res) {
   let state = generateRandomString(16);
   res.cookie(stateKey, state);
 
-  let scope = "user-read-private user-read-email";
+  let scope = "user-read-private user-read-email user-top-read";
   res.redirect(
     "https://accounts.spotify.com/authorize?" +
       querystring.stringify({
@@ -240,9 +240,9 @@ async function checkAccessTokenValidity(accessToken) {
 }  
 
 // If you want to test or refresh your access token validity, uncomment this and replace token strings
-/*
-let expiredToken = 'BQAZIpsxHlmA9XZ6D4EgLu979FcyhzPulXJdx3vFwMEcGoMnzvm82o3x9g8ywIWc5S_HRn_fwPCOq0vcYcvNupKBapFLMUDhCjuB0l24AQ_aTyeoC0ipK1OipV_xOFbIpJL3UJpt9PVgY0K94YrlbSMh0Zff2zFW35tt3k73b5KcijG8IOK_vF4ti_LV7A9I-newzZ9MZlE';
-let refreshToken = 'AQCbM-XENiGmBh5VKUYm0-WkWSTn7hob5DEf6k53CG433wcijn4h8fhHQDcEG968NcQeOef1wBL0Ow9fKx--EXiUkiXalr6T3e1uPlYZ0Ty3rJFFvmK3gvuTl-GPAVbUppY';
+
+let expiredToken = 'BQD-kNKmbZp6kvLmfelx-g3Y8sdrWcc1NXrj4nuxxlFnz8EcpljEWhNfE-L6DkzKRIXhLC69la8BsqXp-7AVg7lnPN0UinWTViLMrB71sy1rNkKoiH8RAqDIAp8wyIQB1OMvvOY7C1-vP7WIN68uzpb3_MbNe7EDN4baN9kSeod2CoY8dyNNlNBqmN06aJx_gg5oCVlqy3ZqQQ';
+let refreshToken = 'AQAHapB8FnpoNDkZcLNq1AHID0vaEArIyxgAez6alElNob7hvLXMMDo5NdYtIsOgR2AeuuHjDKJWU16dKgFxwck3_fqE0_gbsQdz_RAagecB3aivDXpGBQmykA-h-wlrPNE';
 
 // Check the token validity or expiration
 checkAccessTokenValidity(expiredToken)
@@ -259,9 +259,8 @@ checkAccessTokenValidity(expiredToken)
         console.error('Error refreshing access token:', refreshError);
     });
 });
-*/
 
-async function fetchTokensFromDatabase() {
+/*async function fetchTokensFromDatabase() {
     try {
       const result = await pool.query('SELECT access_token, refresh_token FROM accountinfo LIMIT 1');
       if (result.rows.length > 0) {
@@ -296,7 +295,7 @@ fetchTokensFromDatabase()
 })
 .catch(error => {
     console.error('Error fetching tokens from the database:', error);
-});
+});*/
 
 async function getUserDetailsFromDatabase(userId) {
     try {
@@ -422,6 +421,33 @@ app.post("/feed", (req, res) => {
     .catch((error) => {
       console.log(error);
     });
+
+});
+
+app.post("/search", (req, res) => {
+  let song = req.body.song;
+  console.log(song);
+
+  try {
+    let queryResult = pool.query(
+      "SELECT access_token, spotify_id FROM accountinfo WHERE spotify_id = $1",
+      [req.cookies.id]
+      );
+    
+    console.log(queryResult.rows);
+    let access_token = queryResult.rows[0];
+    let path = "https://api.spotify.com/v1/search?q=" + song;
+
+    let response = axios.get(path, {
+        headers: { Authorization: `Bearer ${access_token}` },
+    });
+    console.log(response.data.items);
+    return response.data.items;
+
+} catch (error) {
+    throw error;
+}
+
 });
 
 app.get("/profile", async (req, res) => {
